@@ -57,8 +57,6 @@ st.sidebar.header("Navigation")
 selected_page = st.sidebar.selectbox("Select a page", [
     "Home",
     "Job Description Analysis",
-    "Chatbot",
-    "About",
 ])
 
 if selected_page == "Home":
