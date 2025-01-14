@@ -77,7 +77,8 @@ elif selected_page == "Job Description Matcher":
                 st.write(f"Best matching PDF: {best_match_filename}")
                 st.write(f"Similarity Score: {similarity_score * 100:.2f}%")
                 st.write(f"**Excerpt from the matched document:**")
-                st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:500])  # Show first 500 chars of matched text
+                #st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:500])  # Show first 500 chars of matched text
+                st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:])  # Show first 500 chars of matched text
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
         else:
