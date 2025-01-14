@@ -1,6 +1,7 @@
 streamlit
-fitz  # PyMuPDF library (ensure correct version for your environment)
+#fitz  # PyMuPDF library (ensure correct version for your environment)
+frontend
+pdfplumber
 scikit-learn
 numpy
 python-dotenv
-frontend
