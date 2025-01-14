@@ -1,100 +1,101 @@
 import streamlit as st
 import requests
 import json
+import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-import pdfplumber  # Library for PDF text extraction
+from PyPDF2 import PdfReader
 
 load_dotenv()
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+genai.configure(api_key=GOOGLE_API_KEY)
 
-# Configure your Gemini API key
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-GEMINI_API_URL = "https://your-gemini-api-endpoint"  # Replace with your actual API endpoint
+def extract_text_from_pdf(uploaded_file):
+    try:
+        pdf_reader = PdfReader(uploaded_file)
+        text = ''
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        return text
+    except Exception as e:
+        st.error(f"Error reading PDF: {e}")
+        return None
 
-# Function to extract text from a PDF using pdfplumber
-def extract_text_from_pdf(uploaded_pdf):
-    with pdfplumber.open(uploaded_pdf) as pdf:
-        text = ""
-        for page in pdf.pages:
-            text += page.extract_text() or ""
-    return text
+def generate_text(uploaded_file, job_description):
+    try:
+        if uploaded_file is not None:
+            pdf_text = extract_text_from_pdf(uploaded_file)
+            if pdf_text:
+                st.write("Extracted Text from PDF:")
+                st.text_area("Extracted Text", pdf_text, height=300)
 
-# Function to calculate similarity using Gemini API
-def find_best_match(job_description, pdf_texts):
-    best_match_filename = None
-    best_similarity_score = 0.0
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-    for filename, text in pdf_texts:
-        # Create the payload for the Gemini API
-        payload = {
-            "job_description": job_description,
-            "pdf_content": text
-        }
+        with st.spinner('Generating...'):
+            response = model.generate_content([job_description, pdf_text], stream=True)
+            response.resolve()
+            st.markdown(response.text)
 
-        # Send request to Gemini API
-        response = requests.post(GEMINI_API_URL, headers={"Authorization": f"Bearer {GEMINI_API_KEY}"}, json=payload)
+    except ValueError:
+        error_message = "The provided content might contain hateful or inappropriate elements. Processing failed."
+        st.write(f"<div style='padding: 10px; border-radius: 5px;'> {error_message} </div>", unsafe_allow_html=True)
 
-        if response.status_code == 200:
-            data = response.json()
-            similarity_score = data['similarity_score']  # Adjust based on your API response structure
+def chatbot(prompt):
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        response = model.generate_content(prompt)
+        return response.text
+    except ValueError as e:
+        return f"I apologize, I'm currently encountering some issues and cannot process your request. " \
+               f"The error message is: {str(e)}."
+    except Exception as e:
+        return f"An unexpected error occurred. Please try again later. (Error: {str(e)})"
 
-            # Update best match if the current one is better
-            if similarity_score > best_similarity_score:
-                best_similarity_score = similarity_score
-                best_match_filename = filename
-        else:
-            st.error("Error in API response: " + response.text)
-
-    return best_match_filename, best_similarity_score
-
-# Streamlit interface
-st.set_page_config(page_title="Matchify - PDF Job Description Matcher")
+st.set_page_config(page_title="PDF and Job Description Analysis App")
 
 st.sidebar.header("Navigation")
-selected_page = st.sidebar.selectbox("Select a page", ["Home", "Job Description Matcher"])
+selected_page = st.sidebar.selectbox("Select a page", [
+    "Home",
+    "Job Description Analysis",
+    "Chatbot",
+    "About",
+])
 
 if selected_page == "Home":
-    st.title("Welcome to Matchify!")
-    st.write('"Connecting opportunities with the perfect fit."')
-    st.write("Matchify is your go-to tool for seamlessly matching job descriptions with relevant PDF documents. "
-             "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
-             "Our advanced text analysis and similarity matching technology will help you find the best candidates "
-             "for your job openings, making the hiring process more efficient and effective.")
-    
-    # Add links to GitHub and LinkedIn
-    st.write("Connect with me:")
-    st.markdown("[GitHub](https://github.com/ishaan2692)")
-    st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
+    st.title("Welcome to our PDF and Job Description Analysis App!")
 
-elif selected_page == "Job Description Matcher":
-    st.header("Job Description Matcher")
-    
-    # Allow user to upload multiple PDF files
-    uploaded_pdfs = st.file_uploader("Upload your PDFs", type="pdf", accept_multiple_files=True)
-    job_description = st.text_area("Enter the job description:")
-    
-    if st.button("Match Job Description"):
-        if uploaded_pdfs and job_description:
-            try:
-                # Extract text from the uploaded PDFs
-                pdf_texts = []
-                for uploaded_pdf in uploaded_pdfs:
-                    pdf_text = extract_text_from_pdf(uploaded_pdf)
-                    pdf_texts.append((uploaded_pdf.name, pdf_text))  # Store file name with text
-                
-                # Find the best match using the Gemini API
-                best_match_filename, similarity_score = find_best_match(job_description, pdf_texts)
-                
-                # Show results
-                if best_match_filename:
-                    st.write(f"Best matching PDF: {best_match_filename}")
-                    st.write(f"Similarity Score: {similarity_score * 100:.2f}%")
-                    matched_text = next(text for filename, text in pdf_texts if filename == best_match_filename)
-                    st.write(f"**Excerpt from the matched document:**")
-                    st.write(matched_text[:500])  # Show first 500 chars of matched text
-                else:
-                    st.write("No suitable match found.")
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
-        else:
-            st.error("Please provide both the PDFs and a job description.")
+    html_temp = f"""
+    <div style="text-align: center">
+      <img src="https://cdn3.emoji.gg/emojis/9228-kiwicatrun.gif" width="200" />
+    </div>
+    """
+    st.write(html_temp, unsafe_allow_html=True)
+
+    st.write("This app offers functionalities to help you with:")
+    st.write("- Analyzing job descriptions from PDF files")
+    st.write("- Engaging in conversations with a chatbot")
+    st.write("- Exploring research papers on relevant topics") 
+
+elif selected_page == "Job Description Analysis":
+    st.header("Job Description Analysis")
+    uploaded_file = st.file_uploader("Choose a PDF file...", type=["pdf"])
+    job_description = st.text_area("Job Description", "Enter the job description text here...")
+
+    if st.button('Analyze'):
+        generate_text(uploaded_file, job_description)
+
+elif selected_page == "Chatbot":
+    st.header("Chatbot")
+    user_input = st.text_input("Enter your message:")
+
+    if user_input:
+        bot_response = chatbot(user_input)
+        st.write("Chatbot:", bot_response)
+
+elif selected_page == "About":
+    st.title("About")
+    st.write("""
+    This application is designed to assist users in analyzing job descriptions provided in PDF format, 
+    as well as to provide a chatbot for conversational interactions. 
+    We aim to leverage AI to enhance user experience and provide insightful feedback.
+    """)
