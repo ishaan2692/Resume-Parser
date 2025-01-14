@@ -62,19 +62,16 @@ selected_page = st.sidebar.selectbox("Select a page", [
 ])
 
 if selected_page == "Home":
-    st.title("Welcome to our PDF and Job Description Analysis App!")
+    st.title("Welcome to Matchify!")
+    st.write('"Connecting opportunities with the perfect fit."')
+    st.write("Matchify is your go-to tool for seamlessly matching job descriptions with relevant PDF documents. "
+             "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
+             "Our advanced text analysis and similarity matching technology will help you find the best candidates "
+             "for your job openings, making the hiring process more efficient and effective.")
 
-    html_temp = f"""
-    <div style="text-align: center">
-      <img src="https://cdn3.emoji.gg/emojis/9228-kiwicatrun.gif" width="200" />
-    </div>
-    """
-    st.write(html_temp, unsafe_allow_html=True)
-
-    st.write("This app offers functionalities to help you with:")
-    st.write("- Analyzing job descriptions from PDF files")
-    st.write("- Engaging in conversations with a chatbot")
-    st.write("- Exploring research papers on relevant topics") 
+    st.write("Connect with me:")
+    st.markdown("[GitHub](https://github.com/ishaan2692)")
+    st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
 
 elif selected_page == "Job Description Analysis":
     st.header("Job Description Analysis")
@@ -83,19 +80,3 @@ elif selected_page == "Job Description Analysis":
 
     if st.button('Analyze'):
         generate_text(uploaded_file, job_description)
-
-elif selected_page == "Chatbot":
-    st.header("Chatbot")
-    user_input = st.text_input("Enter your message:")
-
-    if user_input:
-        bot_response = chatbot(user_input)
-        st.write("Chatbot:", bot_response)
-
-elif selected_page == "About":
-    st.title("About")
-    st.write("""
-    This application is designed to assist users in analyzing job descriptions provided in PDF format, 
-    as well as to provide a chatbot for conversational interactions. 
-    We aim to leverage AI to enhance user experience and provide insightful feedback.
-    """)
