@@ -36,14 +36,18 @@ def find_best_match(job_description, pdf_texts):
     return best_match_filename, cosine_similarities[best_match_idx]
 
 # Streamlit interface
-st.set_page_config(page_title="PDF Job Description Matcher")
+st.set_page_config(page_title="Matchify - PDF Job Description Matcher")
 
 st.sidebar.header("Navigation")
 selected_page = st.sidebar.selectbox("Select a page", ["Home", "Job Description Matcher"])
 
 if selected_page == "Home":
-    st.title("Welcome to the Job Description Matcher!")
-    st.write("This app allows you to find the best matching job descriptions from a set of uploaded PDFs.")
+    st.title("Welcome to Matchify!")
+    st.write('"Connecting opportunities with the perfect fit."')
+    st.write("Matchify is your go-to tool for seamlessly matching job descriptions with relevant PDF documents. "
+             "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
+             "Our advanced text analysis and similarity matching technology will help you find the best candidates "
+             "for your job openings, making the hiring process more efficient and effective.")
     
     # Add links to GitHub and LinkedIn
     st.write("Connect with me:")
