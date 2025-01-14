@@ -3,3 +3,4 @@ fitz  # PyMuPDF library (ensure correct version for your environment)
 scikit-learn
 numpy
 python-dotenv
+frontend
