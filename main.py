@@ -1,39 +1,51 @@
 import streamlit as st
-import pdfplumber  # Library for PDF text extraction
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import requests
+import json
+import os
 from dotenv import load_dotenv
+import pdfplumber  # Library for PDF text extraction
 
 load_dotenv()
 
-# Function to extract text from a single PDF file using pdfplumber
+# Configure your Gemini API key
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_URL = "https://your-gemini-api-endpoint"  # Replace with your actual API endpoint
+
+# Function to extract text from a PDF using pdfplumber
 def extract_text_from_pdf(uploaded_pdf):
     with pdfplumber.open(uploaded_pdf) as pdf:
         text = ""
         for page in pdf.pages:
-            text += page.extract_text()
+            text += page.extract_text() or ""
     return text
 
-# Function to calculate the similarity between the job description and the PDF content
+# Function to calculate similarity using Gemini API
 def find_best_match(job_description, pdf_texts):
-    # Use TF-IDF to vectorize the texts
-    vectorizer = TfidfVectorizer(stop_words='english')
-    
-    # Prepare the documents (job description + PDFs)
-    documents = [job_description] + [text for filename, text in pdf_texts]
-    
-    # Vectorize the documents
-    tfidf_matrix = vectorizer.fit_transform(documents)
-    
-    # Compute cosine similarity between the job description (first item) and all PDFs
-    cosine_similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
-    
-    # Get the most similar PDF
-    best_match_idx = np.argmax(cosine_similarities)
-    best_match_filename, best_match_text = pdf_texts[best_match_idx]
-    
-    return best_match_filename, cosine_similarities[best_match_idx]
+    best_match_filename = None
+    best_similarity_score = 0.0
+
+    for filename, text in pdf_texts:
+        # Create the payload for the Gemini API
+        payload = {
+            "job_description": job_description,
+            "pdf_content": text
+        }
+
+        # Send request to Gemini API
+        response = requests.post(GEMINI_API_URL, headers={"Authorization": f"Bearer {GEMINI_API_KEY}"}, json=payload)
+
+        if response.status_code == 200:
+            data = response.json()
+            similarity_score = data['similarity_score']  # Adjust based on your API response structure
+
+            # Update best match if the current one is better
+            if similarity_score > best_similarity_score:
+                best_similarity_score = similarity_score
+                best_match_filename = filename
+        else:
+            st.error("Error in API response: " + response.text)
+
+    return best_match_filename, best_similarity_score
 
 # Streamlit interface
 st.set_page_config(page_title="Matchify - PDF Job Description Matcher")
@@ -70,15 +82,18 @@ elif selected_page == "Job Description Matcher":
                     pdf_text = extract_text_from_pdf(uploaded_pdf)
                     pdf_texts.append((uploaded_pdf.name, pdf_text))  # Store file name with text
                 
-                # Find the best match
+                # Find the best match using the Gemini API
                 best_match_filename, similarity_score = find_best_match(job_description, pdf_texts)
                 
                 # Show results
-                st.write(f"Best matching PDF: {best_match_filename}")
-                st.write(f"Similarity Score: {similarity_score * 100:.2f}%")
-                st.write(f"**Excerpt from the matched document:**")
-                #st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:500])  # Show first 500 chars of matched text
-                st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:])  # Show first 500 chars of matched text
+                if best_match_filename:
+                    st.write(f"Best matching PDF: {best_match_filename}")
+                    st.write(f"Similarity Score: {similarity_score * 100:.2f}%")
+                    matched_text = next(text for filename, text in pdf_texts if filename == best_match_filename)
+                    st.write(f"**Excerpt from the matched document:**")
+                    st.write(matched_text[:500])  # Show first 500 chars of matched text
+                else:
+                    st.write("No suitable match found.")
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
         else:
