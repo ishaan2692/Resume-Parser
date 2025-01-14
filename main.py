@@ -3,7 +3,6 @@ import pdfplumber  # Library for PDF text extraction
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from io import BytesIO
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,6 +44,11 @@ selected_page = st.sidebar.selectbox("Select a page", ["Home", "Job Description 
 if selected_page == "Home":
     st.title("Welcome to the Job Description Matcher!")
     st.write("This app allows you to find the best matching job descriptions from a set of uploaded PDFs.")
+    
+    # Add links to GitHub and LinkedIn
+    st.write("Connect with me:")
+    st.markdown("[GitHub](https://github.com/ishaan2692)")
+    st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
 
 elif selected_page == "Job Description Matcher":
     st.header("Job Description Matcher")
@@ -69,8 +73,7 @@ elif selected_page == "Job Description Matcher":
                 st.write(f"Best matching PDF: {best_match_filename}")
                 st.write(f"Similarity Score: {similarity_score * 100:.2f}%")
                 st.write(f"**Excerpt from the matched document:**")
-                #st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:500])  # Show first 500 chars of matched text
-                st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:])  
+                st.write(pdf_texts[[filename for filename, _ in pdf_texts].index(best_match_filename)][1][:500])  # Show first 500 chars of matched text
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
         else:
