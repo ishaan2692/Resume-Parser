@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-import fitz  # PyMuPDF for PDF text extraction
+import pdfplumber  # New library for PDF text extraction
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -8,16 +8,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Function to extract text from PDFs in a folder
+# Function to extract text from PDFs in a folder using pdfplumber
 def extract_text_from_pdfs(folder_path):
     pdf_texts = []
     pdf_files = [f for f in os.listdir(folder_path) if f.endswith('.pdf')]
     for pdf_file in pdf_files:
         pdf_path = os.path.join(folder_path, pdf_file)
-        doc = fitz.open(pdf_path)
-        text = ""
-        for page in doc:
-            text += page.get_text()
+        with pdfplumber.open(pdf_path) as pdf:
+            text = ""
+            for page in pdf.pages:
+                text += page.extract_text()
         pdf_texts.append((pdf_file, text))
     return pdf_texts
 
