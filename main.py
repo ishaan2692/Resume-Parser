@@ -29,27 +29,24 @@ def generate_text(uploaded_file, job_description):
                 st.write("Extracted Text from PDF:")
                 st.text_area("Extracted Text", pdf_text, height=300)
 
+        prompt = (
+            "Assess candidate fit for the job description. Consider substitutes for skills and experience:\n\n"
+            "Skills: Match or equivalent technologies.\n"
+            "Experience: Relevance to key responsibilities.\n"
+            "Fit: Suitability based on experience and skills.\n\n"
+            f"Job Description:\n{job_description}\n\nResume Content:\n{pdf_text}"
+        )
+
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
         with st.spinner('Generating...'):
-            response = model.generate_content([job_description, pdf_text], stream=True)
+            response = model.generate_content([prompt], stream=True)
             response.resolve()
             st.markdown(response.text)
 
     except ValueError:
         error_message = "The provided content might contain hateful or inappropriate elements. Processing failed."
         st.write(f"<div style='padding: 10px; border-radius: 5px;'> {error_message} </div>", unsafe_allow_html=True)
-
-def chatbot(prompt):
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        response = model.generate_content(prompt)
-        return response.text
-    except ValueError as e:
-        return f"I apologize, I'm currently encountering some issues and cannot process your request. " \
-               f"The error message is: {str(e)}."
-    except Exception as e:
-        return f"An unexpected error occurred. Please try again later. (Error: {str(e)})"
 
 st.set_page_config(page_title="PDF and Job Description Analysis App")
 
@@ -66,7 +63,7 @@ if selected_page == "Home":
              "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
              "Our advanced text analysis and similarity matching technology will help you find the best candidates "
              "for your job openings, making the hiring process more efficient and effective.")
-    st.write("Created by ishaaan.")
+    st.write("Created by Ishaaan.")
     st.write("Connect with me:")
     st.markdown("[GitHub](https://github.com/ishaan2692)")
     st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
@@ -74,11 +71,7 @@ if selected_page == "Home":
 elif selected_page == "Job Description Analysis":
     st.header("Job Description Analysis")
     uploaded_file = st.file_uploader("Choose a PDF file...", type=["pdf"])
-    job_description = st.text_area("Job Description", """Assess candidate fit for the job description. Consider substitutes for skills and experience:
-
-Skills: Match or equivalent technologies.
-Experience: Relevance to key responsibilities.
-Fit: Suitability based on experience and skills.""")
+    job_description = st.text_area("Job Description", "")
 
     if st.button('Analyze'):
         generate_text(uploaded_file, job_description)
