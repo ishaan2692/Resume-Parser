@@ -8,15 +8,17 @@ from PyPDF2 import PdfReader
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-genai.configure(api_key=GOOGLE_API_KEY)
+
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+else:
+    st.error("Google API Key not found. Please check your environment variables.")
 
 def extract_text_from_pdf(uploaded_file):
     try:
         pdf_reader = PdfReader(uploaded_file)
-        text = ''
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
+        text_lines = [page.extract_text() for page in pdf_reader.pages]
+        return "".join(text_lines)
     except Exception as e:
         st.error(f"Error reading PDF: {e}")
         return None
@@ -29,20 +31,20 @@ def generate_text(uploaded_file, job_description):
                 st.write("Extracted Text from PDF:")
                 st.text_area("Extracted Text", pdf_text, height=300)
 
-        prompt = (
-            "Assess candidate fit for the job description. Consider substitutes for skills and experience:\n\n"
-            "Skills: Match or equivalent technologies.\n"
-            "Experience: Relevance to key responsibilities.\n"
-            "Fit: Suitability based on experience and skills.\n\n"
-            f"Job Description:\n{job_description}\n\nResume Content:\n{pdf_text}"
-        )
+                prompt = (
+                    "Assess candidate fit for the job description. Consider substitutes for skills and experience:\n\n"
+                    "Skills: Match or equivalent technologies.\n"
+                    "Experience: Relevance to key responsibilities.\n"
+                    "Fit: Suitability based on experience and skills.\n\n"
+                    f"Job Description:\n{job_description}\n\nResume Content:\n{pdf_text}"
+                )
 
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        with st.spinner('Generating...'):
-            response = model.generate_content([prompt], stream=True)
-            response.resolve()
-            st.markdown(response.text)
+                with st.spinner('Generating...'):
+                    response = model.generate_content([prompt], stream=True)
+                    response.resolve()
+                    st.markdown(response.text)
 
     except ValueError:
         error_message = "The provided content might contain hateful or inappropriate elements. Processing failed."
@@ -63,7 +65,7 @@ if selected_page == "Home":
              "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
              "Our advanced text analysis and similarity matching technology will help you find the best candidates "
              "for your job openings, making the hiring process more efficient and effective.")
-    st.write("Created by Ishaaan.")
+    st.write("Created by Ishaan.")
     st.write("Connect with me:")
     st.markdown("[GitHub](https://github.com/ishaan2692)")
     st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
