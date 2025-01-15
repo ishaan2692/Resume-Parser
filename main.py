@@ -74,7 +74,11 @@ if selected_page == "Home":
 elif selected_page == "Job Description Analysis":
     st.header("Job Description Analysis")
     uploaded_file = st.file_uploader("Choose a PDF file...", type=["pdf"])
-    job_description = st.text_area("Job Description", "Enter the job description text here...")
+    job_description = st.text_area("Job Description", "Assess candidate fit for the job description. Consider substitutes for skills and experience:
+
+Skills: Match or equivalent technologies.
+Experience: Relevance to key responsibilities.
+Fit: Suitability based on experience and skills.")
 
     if st.button('Analyze'):
         generate_text(uploaded_file, job_description)
