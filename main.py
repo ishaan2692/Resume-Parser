@@ -66,7 +66,7 @@ if selected_page == "Home":
              "Simply upload your job descriptions and PDF resumes, and let Matchify do the work. "
              "Our advanced text analysis and similarity matching technology will help you find the best candidates "
              "for your job openings, making the hiring process more efficient and effective.")
-
+    st.write("Created by ishaaan.")
     st.write("Connect with me:")
     st.markdown("[GitHub](https://github.com/ishaan2692)")
     st.markdown("[LinkedIn](https://in.linkedin.com/in/ishaanbagul)")
